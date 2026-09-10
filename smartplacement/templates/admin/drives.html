@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Manage Placement Drives{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card p-4 shadow-sm">
+            <h4 class="fw-bold text-primary mb-3"><i class="bi bi-calendar-plus me-2"></i> Create Placement Drive</h4>
+            <form action="{{ url_for('admin.manage_drives') }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Select Company</label>
+                    <select name="company_id" class="form-select" required>
+                        <option value="">-- Choose Partner Company --</option>
+                        {% for c in companies %}
+                            <option value="{{ c.company_id }}">{{ c.company_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Job Role Title</label>
+                    <input type="text" name="job_role" class="form-control" placeholder="e.g. Software Engineer Trainee" required>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Package CTC (LPA)</label>
+                        <input type="number" step="0.25" min="0" name="package_ctc" class="form-control" placeholder="7.50" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Vacancies Count</label>
+                        <input type="number" min="0" name="vacancies" class="form-control" value="10">
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Drive Date</label>
+                        <input type="date" name="drive_date" class="form-control" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold">Deadline</label>
+                        <input type="date" name="application_deadline" class="form-control" required>
+                    </div>
+                </div>
+
+                <hr class="my-3">
+                <h6 class="fw-bold text-secondary mb-2">Eligibility Cutoff Rules</h6>
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <label class="form-label small fw-semibold">Min CGPA</label>
+                        <input type="number" step="0.1" min="0" max="10" name="minimum_cgpa" class="form-control" value="7.0" required>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small fw-semibold">Min 10th %</label>
+                        <input type="number" step="1" min="0" max="100" name="minimum_tenth" class="form-control" value="60" required>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small fw-semibold">Min 12th %</label>
+                        <input type="number" step="1" min="0" max="100" name="minimum_twelfth" class="form-control" value="60">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Max Backlogs Allowed</label>
+                        <input type="number" min="0" name="maximum_backlogs" class="form-control" value="0" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-semibold">Graduation Year</label>
+                        <input type="number" name="placement_year" class="form-control" value="2026" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Eligible Branches</label>
+                    <div class="row g-1">
+                        {% for b in branches %}
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="allowed_branches" value="{{ b.branch_id }}" id="admin_b_{{ b.branch_id }}" checked>
+                                <label class="form-check-label small" for="admin_b_{{ b.branch_id }}">{{ b.branch_code }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label small fw-semibold mb-0">Mandatory Required Skills</label>
+                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-semibold" data-bs-toggle="modal" data-bs-target="#addSkillModal">
+                            <i class="bi bi-plus-circle me-1"></i> Add New Skill
+                        </button>
+                    </div>
+                    <div class="row g-1" style="max-height: 120px; overflow-y: auto;">
+                        {% for s in skills %}
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="mandatory_skills" value="{{ s.skill_id }}" id="admin_s_{{ s.skill_id }}">
+                                <label class="form-check-label small" for="admin_s_{{ s.skill_id }}">{{ s.skill_name }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <hr class="my-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-secondary mb-0"><i class="bi bi-list-task me-1"></i> Selection Process & Rounds</h6>
+                    <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 text-decoration-none" id="addRoundBtn">
+                        <i class="bi bi-plus-circle me-1"></i> Add Round
+                    </button>
+                </div>
+                <div id="roundsContainer" class="mb-3">
+                    <div class="card p-2 mb-2 bg-light border round-row">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-primary rounded-pill round-badge">Round 1</span>
+                            <button type="button" class="btn-close btn-sm remove-round-btn" style="font-size: 0.7rem;" aria-label="Remove"></button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="text" name="round_name[]" class="form-control form-control-sm mb-1" placeholder="Round Title (e.g. Online Aptitude Test)" value="Online Aptitude & Reasoning Test" required>
+                            </div>
+                            <div class="col-12">
+                                <input type="text" name="round_description[]" class="form-control form-control-sm" placeholder="Short description (e.g. 60 mins test)" value="60-minute online assessment covering Aptitude, Logical Reasoning, and Core CS Fundamentals.">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-2 mb-2 bg-light border round-row">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-primary rounded-pill round-badge">Round 2</span>
+                            <button type="button" class="btn-close btn-sm remove-round-btn" style="font-size: 0.7rem;" aria-label="Remove"></button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="text" name="round_name[]" class="form-control form-control-sm mb-1" placeholder="Round Title (e.g. Technical Interview)" value="Technical & Coding Interview" required>
+                            </div>
+                            <div class="col-12">
+                                <input type="text" name="round_description[]" class="form-control form-control-sm" placeholder="Short description" value="Live coding evaluation on Data Structures, OOPs, SQL queries, and system design.">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card p-2 mb-2 bg-light border round-row">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-primary rounded-pill round-badge">Round 3</span>
+                            <button type="button" class="btn-close btn-sm remove-round-btn" style="font-size: 0.7rem;" aria-label="Remove"></button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <input type="text" name="round_name[]" class="form-control form-control-sm mb-1" placeholder="Round Title (e.g. HR Interview)" value="HR & Cultural Fitment Interview" required>
+                            </div>
+                            <div class="col-12">
+                                <input type="text" name="round_description[]" class="form-control form-control-sm" placeholder="Short description" value="Soft skills assessment, communication skills, workplace alignment, and compensation discussion.">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="bi bi-check-circle me-1"></i> Publish Placement Drive</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card p-4 shadow-sm">
+            <h4 class="fw-bold mb-3"><i class="bi bi-calendar-event me-2"></i> All Placement Drives</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Company & Role</th>
+                            <th>Package</th>
+                            <th>Drive Date</th>
+                            <th>Min CGPA</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in drives %}
+                        <tr>
+                            <td>
+                                <strong class="d-block text-dark">{{ d.company_name }}</strong>
+                                <small class="text-primary">{{ d.job_role }}</small>
+                            </td>
+                            <td><span class="badge bg-success-subtle text-success border">₹{{ "%.2f"|format(d.package_ctc) }} LPA</span></td>
+                            <td><small>{{ d.drive_date }}</small></td>
+                            <td><strong>{{ "%.2f"|format(d.minimum_cgpa or 0) }}</strong></td>
+                            <td class="text-center">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="{{ url_for('admin.export_eligible_students', drive_id=d.drive_id) }}" class="btn btn-sm btn-outline-success" title="Export Eligible Candidates CSV">
+                                        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export
+                                    </a>
+                                    <form action="{{ url_for('admin.delete_drive', drive_id=d.drive_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete drive for {{ d.company_name }} ({{ d.job_role }})?');" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Drive">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">No drives registered.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Skill Modal -->
+<div class="modal fade" id="addSkillModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form action="{{ url_for('admin.add_skill') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-1"></i> Add Custom Skill</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Skill Name <span class="text-danger">*</span></label>
+                        <input type="text" name="skill_name" class="form-control form-control-sm" placeholder="e.g. React.js, PyTorch, Docker" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Category</label>
+                        <select name="skill_category" class="form-select form-select-sm">
+                            <option value="Programming">Programming</option>
+                            <option value="Frontend">Frontend</option>
+                            <option value="Backend">Backend</option>
+                            <option value="Database">Database</option>
+                            <option value="DevOps">DevOps</option>
+                            <option value="Core CSE">Core CSE</option>
+                            <option value="Technical" selected>Technical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer p-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold">Save Skill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const roundsContainer = document.getElementById('roundsContainer');
+    const addRoundBtn = document.getElementById('addRoundBtn');
+
+    function updateRoundBadges() {
+        if (!roundsContainer) return;
+        const rows = roundsContainer.querySelectorAll('.round-row');
+        rows.forEach((row, index) => {
+            const badge = row.querySelector('.round-badge');
+            if (badge) badge.textContent = `Round ${index + 1}`;
+        });
+    }
+
+    if (addRoundBtn && roundsContainer) {
+        addRoundBtn.addEventListener('click', function() {
+            const currentCount = roundsContainer.querySelectorAll('.round-row').length;
+            const newRow = document.createElement('div');
+            newRow.className = 'card p-2 mb-2 bg-light border round-row';
+            newRow.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="badge bg-primary rounded-pill round-badge">Round ${currentCount + 1}</span>
+                    <button type="button" class="btn-close btn-sm remove-round-btn" style="font-size: 0.7rem;" aria-label="Remove"></button>
+                </div>
+                <div class="row g-2">
+                    <div class="col-12">
+                        <input type="text" name="round_name[]" class="form-control form-control-sm mb-1" placeholder="Round Title (e.g. Managerial Round)" required>
+                    </div>
+                    <div class="col-12">
+                        <input type="text" name="round_description[]" class="form-control form-control-sm" placeholder="Short description">
+                    </div>
+                </div>
+            `;
+            roundsContainer.appendChild(newRow);
+            updateRoundBadges();
+        });
+
+        roundsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-round-btn')) {
+                const row = e.target.closest('.round-row');
+                if (row && roundsContainer.querySelectorAll('.round-row').length > 1) {
+                    row.remove();
+                    updateRoundBadges();
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

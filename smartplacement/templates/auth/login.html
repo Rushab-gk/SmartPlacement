@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Account Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm p-4">
+            <h3 class="fw-bold text-center text-primary mb-3"><i class="bi bi-shield-lock me-2"></i> Account Login</h3>
+            <p class="text-center text-muted small mb-4">Select role and enter your registered credentials.</p>
+
+            <form action="{{ url_for('auth.login', role=selected_role) }}" method="POST" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Login Role</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="user_type" id="role_student" value="student" {% if selected_role != 'admin' %}checked{% endif %} onchange="location.href='{{ url_for('auth.login') }}?role=student'">
+                        <label class="btn {% if selected_role != 'admin' %}btn-primary fw-bold{% else %}btn-outline-primary{% endif %}" for="role_student"><i class="bi bi-person-fill me-1"></i> Student</label>
+
+                        <input type="radio" class="btn-check" name="user_type" id="role_admin" value="admin" {% if selected_role == 'admin' %}checked{% endif %} onchange="location.href='{{ url_for('auth.login') }}?role=admin'">
+                        <label class="btn {% if selected_role == 'admin' %}btn-primary fw-bold{% else %}btn-outline-primary{% endif %}" for="role_admin"><i class="bi bi-shield-fill me-1"></i> Placement Admin</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email Address</label>
+                    <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Password</label>
+                    <div class="input-group">
+                        <input type="password" name="password" id="login_password" class="form-control" placeholder="Enter password" autocomplete="current-password" required>
+                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('login_password', this)" title="Toggle password visibility">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-bold"><i class="bi bi-box-arrow-in-right me-1"></i> Log In</button>
+            </form>
+
+            <div class="mt-4 text-center">
+                <span class="text-muted">Don't have a profile?</span>
+                <a href="{{ url_for('auth.register') }}" class="fw-bold text-decoration-none ms-1">Register Student Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Home{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-lg-10 text-center py-4">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-3 fw-bold">
+            <i class="bi bi-shield-check me-1"></i> 100% Local & Self-Hosted College Portal
+        </span>
+        <h1 class="display-4 fw-bold lh-1 mb-3 text-dark">
+            Campus Placement Intelligence & Eligibility System
+        </h1>
+        <p class="lead text-muted mb-4 mx-auto" style="max-width: 800px;">
+            SmartPlacement helps students evaluate company eligibility, identify missing technical skills, view package CTC details, and receive readiness guidance — all driven by local college data and MySQL.
+        </p>
+        <div class="d-flex justify-content-center flex-wrap gap-3 mb-4">
+            {% if not current_user_name %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 fw-bold">
+                    <i class="bi bi-person-plus-fill me-1"></i> Register Student Profile
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Login
+                </a>
+            {% else %}
+                <a href="{{ url_for('student.dashboard') if current_user_role == 'student' else url_for('admin.dashboard') }}" class="btn btn-primary btn-lg px-4 fw-bold">
+                    <i class="bi bi-speedometer2 me-1"></i> Go to Dashboard
+                </a>
+            {% endif %}
+            <a href="{{ url_for('placement.eligibility_checker') }}" class="btn btn-light btn-lg border px-4">
+                <i class="bi bi-calculator me-1"></i> Test Eligibility
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

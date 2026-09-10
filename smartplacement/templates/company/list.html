@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Placement Drives Directory{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="fw-bold mb-1"><i class="bi bi-building me-2"></i> Campus Placement Drives</h2>
+        <p class="text-muted mb-0">Browse visiting company drives, packages, eligibility criteria, and job specifications.</p>
+    </div>
+</div>
+
+<!-- Search & Filtering Bar -->
+<div class="card p-3 mb-4 bg-white shadow-sm">
+    <form action="{{ url_for('company.list_drives') }}" method="GET" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">Search Company / Role</label>
+            <input type="text" name="q" class="form-control form-control-sm" placeholder="e.g. TechCorp, Software" value="{{ search_query or '' }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small fw-semibold">Target Branch</label>
+            <select name="branch" class="form-select form-select-sm">
+                <option value="">All Branches</option>
+                {% for b in branches %}
+                    <option value="{{ b.branch_id }}" {% if selected_branch == b.branch_id %}selected{% endif %}>{{ b.branch_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold"><i class="bi bi-calendar-month me-1 text-primary"></i> Month</label>
+            <select name="month" class="form-select form-select-sm">
+                <option value="">All Months</option>
+                {% for m in available_months %}
+                    <option value="{{ m }}" {% if selected_month == m %}selected{% endif %}>Batch {{ m }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small fw-semibold">Min Package (LPA)</label>
+            <input type="number" step="0.5" name="min_ctc" class="form-control form-control-sm" placeholder="e.g. 6.0" value="{{ min_package or '' }}">
+        </div>
+        <div class="col-md-2 d-flex gap-1">
+            <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold"><i class="bi bi-filter me-1"></i> Filter</button>
+            <a href="{{ url_for('company.list_drives') }}" class="btn btn-light btn-sm border">Clear</a>
+        </div>
+    </form>
+</div>
+
+<!-- Placement Drives Grid -->
+<div class="row g-4">
+    {% for item in drives %}
+    {% set drive = item.drive %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100 p-3 shadow-sm border-0 position-relative">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                    <h5 class="fw-bold mb-0 text-dark">{{ drive.company_name }}</h5>
+                    <small class="text-muted"><i class="bi bi-tag me-1"></i>{{ drive.industry }}</small>
+                </div>
+                <span class="badge bg-success-subtle text-success border fw-bold fs-6">₹{{ "%.2f"|format(drive.package_ctc) }} LPA</span>
+            </div>
+
+            <div class="my-2">
+                <h6 class="fw-bold text-primary mb-1">{{ drive.job_role }}</h6>
+                <div class="small text-muted mb-2">
+                    <i class="bi bi-calendar-event me-1"></i> Drive Date: <strong>{{ drive.drive_date }}</strong>
+                </div>
+                <div class="small text-muted">
+                    <i class="bi bi-journal-code me-1"></i> Min CGPA: <strong>{{ "%.2f"|format(drive.minimum_cgpa or 0) }}</strong> | Max Backlogs: <strong>{{ drive.maximum_backlogs or 0 }}</strong>
+                </div>
+            </div>
+
+            <!-- Student Eligibility Status Badge -->
+            {% if current_user_role == 'student' %}
+            <div class="my-2">
+                {% if item.is_eligible %}
+                    <span class="badge badge-eligibility-eligible w-100 py-2"><i class="bi bi-check-circle-fill me-1"></i> ELIGIBLE TO APPLY</span>
+                {% else %}
+                    <span class="badge badge-eligibility-ineligible w-100 py-2" title="{{ item.reasons[0] }}"><i class="bi bi-x-circle-fill me-1"></i> INELIGIBLE: {{ item.reasons[0] }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="mt-auto pt-3 border-top d-flex justify-content-between align-items-center">
+                {% if current_user_role == 'student' %}
+                    <form action="{{ url_for('student.toggle_bookmark', drive_id=drive.drive_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm {% if item.is_bookmarked %}btn-warning{% else %}btn-outline-secondary{% endif %}">
+                            <i class="bi bi-bookmark{% if item.is_bookmarked %}-fill{% endif %}"></i>
+                        </button>
+                    </form>
+                {% endif %}
+                <a href="{{ url_for('company.detail', drive_id=drive.drive_id) }}" class="btn btn-sm btn-primary fw-bold">View Full Drive Specs &rarr;</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info text-center py-4">
+            <h5>No placement drives match your filter criteria.</h5>
+            <p class="mb-0">Try clearing filters or checking back later.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

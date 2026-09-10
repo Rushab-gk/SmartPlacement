@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – {{ drive.company_name }} Drive Details{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card p-4 shadow-sm mb-4">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h2 class="fw-bold mb-1">{{ drive.company_name }}</h2>
+                    <h5 class="text-primary fw-bold mb-1">{{ drive.job_role }}</h5>
+                    <p class="text-muted mb-0"><i class="bi bi-geo-alt me-1"></i> HQ: {{ drive.headquarters or 'N/A' }} | Industry: {{ drive.industry }}</p>
+                </div>
+                <div class="text-end">
+                    <span class="fs-3 fw-bold text-success d-block">₹{{ "%.2f"|format(drive.package_ctc) }} LPA</span>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle fs-6 px-3 py-1 mt-1">
+                        <i class="bi bi-people-fill me-1"></i> {{ drive.vacancies or 0 }} Openings
+                    </span>
+                </div>
+            </div>
+
+            {% if drive.website %}
+                <p><a href="{{ drive.website }}" target="_blank" class="text-decoration-none"><i class="bi bi-globe me-1"></i> Visit Official Company Website &rarr;</a></p>
+            {% endif %}
+
+            <h5 class="fw-bold text-primary mt-3"><i class="bi bi-briefcase me-2"></i> Role Description</h5>
+            <p class="text-secondary">{{ drive.company_desc or 'No additional description provided.' }}</p>
+
+            <hr>
+
+            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-shield-check me-2"></i> Academic Eligibility & Vacancy Details</h5>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Minimum CGPA</small>
+                        <strong class="fs-5 text-dark">{{ "%.2f"|format(drive.minimum_cgpa or 0) }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Minimum 10th %</small>
+                        <strong class="fs-5 text-dark">{{ "%.1f"|format(drive.minimum_tenth or 0) }}%</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Minimum 12th %</small>
+                        <strong class="fs-5 text-dark">{{ "%.1f"|format(drive.minimum_twelfth or 0) }}%</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Max Backlogs Allowed</small>
+                        <strong class="fs-5 text-dark">{{ drive.maximum_backlogs or 0 }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Graduation Year</small>
+                        <strong class="fs-5 text-dark">{{ drive.graduation_year or 2026 }}</strong>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 bg-light rounded text-center border">
+                        <small class="text-muted d-block">Vacancies Offered</small>
+                        <strong class="fs-5 text-primary"><i class="bi bi-people me-1"></i> {{ drive.vacancies or 0 }} Positions</strong>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-diagram-3 text-primary me-1"></i> Allowed Branches:</h6>
+            <div class="mb-4 d-flex flex-wrap gap-2">
+                {% for b in allowed_branches %}
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6 px-3 py-2 rounded-pill shadow-sm">
+                        <i class="bi bi-mortarboard-fill me-1"></i> {{ b.branch_name }} ({{ b.branch_code }})
+                    </span>
+                {% else %}
+                    <span class="text-muted small">Open for all academic branches.</span>
+                {% endfor %}
+            </div>
+
+            <hr>
+
+            <h5 class="fw-bold text-primary mb-3"><i class="bi bi-list-task me-2"></i> Selection Process & Rounds</h5>
+            {% if rounds %}
+                <div class="timeline ps-2">
+                    {% for r in rounds %}
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="me-3 text-center">
+                                <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 36px; height: 36px; font-size: 1rem;">
+                                    {{ r.round_number }}
+                                </span>
+                            </div>
+                            <div class="card p-3 w-100 shadow-sm border-start border-primary border-4">
+                                <h6 class="fw-bold text-dark mb-1">{{ r.round_name }}</h6>
+                                <p class="text-secondary small mb-0">{{ r.description or 'No specific round description provided.' }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="timeline ps-2">
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="me-3 text-center">
+                            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 36px; height: 36px; font-size: 1rem;">1</span>
+                        </div>
+                        <div class="card p-3 w-100 shadow-sm border-start border-primary border-4">
+                            <h6 class="fw-bold text-dark mb-1">Round 1: Online Aptitude & Technical Assessment</h6>
+                            <p class="text-secondary small mb-0">60-minute online screening test covering Quantitative Aptitude, Logical Reasoning, English Comprehension, and Data Structures & Algorithms.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="me-3 text-center">
+                            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 36px; height: 36px; font-size: 1rem;">2</span>
+                        </div>
+                        <div class="card p-3 w-100 shadow-sm border-start border-primary border-4">
+                            <h6 class="fw-bold text-dark mb-1">Round 2: Technical & Coding Interview</h6>
+                            <p class="text-secondary small mb-0">In-depth technical interview focusing on live coding, core Computer Science fundamentals (OS, DBMS, Computer Networks), and candidate projects.</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="me-3 text-center">
+                            <span class="badge bg-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 36px; height: 36px; font-size: 1rem;">3</span>
+                        </div>
+                        <div class="card p-3 w-100 shadow-sm border-start border-primary border-4">
+                            <h6 class="fw-bold text-dark mb-1">Round 3: HR & Cultural Fitment Interview</h6>
+                            <p class="text-secondary small mb-0">Final interview assessing communication skills, team collaboration, career aspirations, workplace culture alignment, and compensation discussion.</p>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Side Sidebar: Student Personal Match Result -->
+    <div class="col-lg-4">
+        {% if current_user_role == 'student' and eligibility_info %}
+        <div class="card p-3 shadow-sm mb-4 border-top border-4 {% if eligibility_info.is_eligible %}border-success{% else %}border-danger{% endif %}">
+            <h5 class="fw-bold mb-2">Your Eligibility Result</h5>
+            {% if eligibility_info.is_eligible %}
+                <div class="alert alert-success fw-bold text-center">
+                    <i class="bi bi-check-circle-fill me-1"></i> YOU ARE ELIGIBLE
+                </div>
+                <p class="small text-muted mb-0">All academic prerequisites (CGPA, percentages, branch, and backlogs) match your registered profile.</p>
+            {% else %}
+                <div class="alert alert-danger fw-bold text-center">
+                    <i class="bi bi-x-circle-fill me-1"></i> NOT ELIGIBLE
+                </div>
+                <h6 class="fw-bold small text-danger">Unmet Requirements:</h6>
+                <ul class="small ps-3 text-danger">
+                    {% for r in eligibility_info.reasons %}
+                        <li>{{ r }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        {% if skill_analysis %}
+        <div class="card p-3 shadow-sm mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-tools me-1"></i> Skill Match Matrix</h5>
+            <div class="progress mb-3" style="height: 16px;">
+                <div class="progress-bar bg-info" style="width: {{ skill_analysis.match_percentage }}%;">{{ skill_analysis.match_percentage }}%</div>
+            </div>
+            
+            <a href="{{ url_for('placement.skill_gap', drive_id=drive.drive_id) }}" class="btn btn-outline-primary btn-sm w-100 fw-bold">
+                <i class="bi bi-pie-chart me-1"></i> Detailed Skill Gap Analysis
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <div class="card p-3 shadow-sm">
+            <h6 class="fw-bold text-dark mb-2">Important Deadlines</h6>
+            <div class="small text-muted mb-2">
+                <i class="bi bi-alarm text-danger me-1"></i> Application Deadline: <strong class="text-danger">{{ drive.application_deadline }}</strong>
+            </div>
+            <div class="small text-muted mb-3">
+                <i class="bi bi-calendar-check text-primary me-1"></i> Drive Date: <strong>{{ drive.drive_date }}</strong>
+            </div>
+            <a href="{{ url_for('company.list_drives') }}" class="btn btn-secondary btn-sm w-100">&larr; Back to All Drives</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

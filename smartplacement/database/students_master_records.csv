@@ -1,0 +1,9 @@
+USN / Roll,Student Name,Email,Branch,Grad Year,CGPA,10th %,12th %,Diploma %,Active Backlogs,DSA Level,Technical Skills,Readiness Score
+1VA22CS001,Aarav Sharma,aarav.cs22@college.edu,Computer Science & Engineering (CSE),2026,8.85,92.0,90.0,,0,Advanced,"Python, SQL, DSA, Flask",88.0
+1VA22CS045,Ananya Rao,ananya.cs22@college.edu,Computer Science & Engineering (CSE),2026,7.4,85.0,82.0,,0,Intermediate,"Java, SQL, HTML/CSS",69.0
+1VA22IS012,Rohan Verma,rohan.is22@college.edu,Information Science & Engineering (ISE),2026,9.1,94.0,92.0,,0,Advanced,"Python, Cloud Computing, Docker, DSA",92.5
+1VA22IS034,Sneha Patil,sneha.is22@college.edu,Information Science & Engineering (ISE),2026,8.2,88.0,86.0,,0,Intermediate,"Python, SQL, JavaScript",77.0
+1VA22EC018,Karthik Nair,karthik.ec22@college.edu,Electronics & Communication (ECE),2026,7.8,82.0,80.0,,0,Intermediate,"C++, Operating Systems, Python",73.5
+1VA22EC052,Pooja Hegde,pooja.ec22@college.edu,Electronics & Communication (ECE),2026,8.6,90.0,88.0,,0,Advanced,"C++, Computer Networks, SQL",84.0
+1VA22EE009,Aditya Kulkarni,aditya.ee22@college.edu,Electrical & Electronics (EEE),2026,7.2,78.0,75.0,,1,Beginner,"C++, SQL",61.0
+1VA22ME025,Vikram Singh,vikram.me22@college.edu,Mechanical Engineering (ME),2026,6.9,75.0,72.0,,0,Beginner,"Python, Operating Systems",58.5

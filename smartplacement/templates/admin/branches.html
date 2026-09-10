@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Branches – SmartPlacement Admin{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4 align-items-center">
+    <div class="col-md-8">
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-diagram-3-fill text-primary"></i> Academic Branches Management
+        </h2>
+        <p class="text-muted mb-0">Add, view, or delete engineering branches offered by the college.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Admin Dashboard
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Add Branch Form -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-bold py-3">
+                <i class="bi bi-plus-circle-fill me-1"></i> Add New Branch
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('admin.manage_branches') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Branch Full Name <span class="text-danger">*</span></label>
+                        <input type="text" name="branch_name" class="form-control" placeholder="e.g. Artificial Intelligence & Data Science" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Branch Code <span class="text-danger">*</span></label>
+                        <input type="text" name="branch_code" class="form-control text-uppercase" placeholder="e.g. AI&DS" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-check-lg"></i> Add Branch
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branches List -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light fw-bold py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-stars me-1 text-primary"></i> Active College Branches ({{ branches|length }})</span>
+            </div>
+            <div class="card-body p-0">
+                {% if branches %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Branch Code</th>
+                                <th>Branch Name</th>
+                                <th>Enrolled Students</th>
+                                <th>Active Drives</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in branches %}
+                            <tr>
+                                <td>
+                                    <span class="badge bg-primary fs-6">{{ b.branch_code }}</span>
+                                </td>
+                                <td class="fw-semibold text-dark">{{ b.branch_name }}</td>
+                                <td>
+                                    {% if b.student_count > 0 %}
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-people-fill me-1"></i> {{ b.student_count }} Student(s)</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">0 Students</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if b.drive_count > 0 %}
+                                        <span class="badge bg-info text-dark"><i class="bi bi-building me-1"></i> {{ b.drive_count }} Drive(s)</span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">0 Drives</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if b.student_count == 0 %}
+                                        <form action="{{ url_for('admin.delete_branch', branch_id=b.branch_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete branch {{ b.branch_code }}?');" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <form action="{{ url_for('admin.delete_branch', branch_id=b.branch_id) }}" method="POST" onsubmit="return confirm('WARNING: {{ b.student_count }} student(s) are enrolled in {{ b.branch_code }}. Force deleting will also delete these enrolled student accounts! Proceed?');" class="d-inline">
+                                            <input type="hidden" name="force" value="true">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Force Delete (Removes enrolled students)">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> Force Delete
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-diagram-3 fs-1 text-secondary"></i>
+                    <p class="mt-2 mb-0">No academic branches found. Add one above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

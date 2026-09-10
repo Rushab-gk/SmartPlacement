@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students – SmartPlacement Admin{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4 align-items-center">
+    <div class="col-md-7">
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-people-fill text-primary"></i> Student Master Directory
+        </h2>
+        <p class="text-muted mb-0">View, search, filter, register, edit, or remove candidate student records.</p>
+    </div>
+    <div class="col-md-6 text-md-end d-flex gap-2 justify-content-md-end flex-wrap">
+        <button class="btn btn-primary fw-bold btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+            <i class="bi bi-person-plus-fill me-1"></i> Register Student
+        </button>
+        <button class="btn btn-success fw-bold btn-sm" data-bs-toggle="modal" data-bs-target="#importStudentsModal">
+            <i class="bi bi-file-earmark-excel-fill me-1"></i> Import Excel
+        </button>
+        <a href="{{ url_for('admin.export_all_students_csv') }}" class="btn btn-outline-success btn-sm fw-semibold">
+            <i class="bi bi-download me-1"></i> Export Master CSV
+        </a>
+    </div>
+</div>
+
+<!-- Search & Filter Card -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-3">
+        <form method="GET" action="{{ url_for('admin.manage_students') }}" class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Search by USN/Roll or Name..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="branch_id" class="form-select">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                        <option value="{{ b.branch_id }}" {% if selected_branch == b.branch_id|string or selected_branch == b.branch_id %}selected{% endif %}>{{ b.branch_name }} ({{ b.branch_code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="grad_year" class="form-select">
+                    <option value="">All Grad Years</option>
+                    {% for y in range(2024, 2028) %}
+                        <option value="{{ y }}" {% if selected_year == y|string or selected_year == y %}selected{% endif %}>Batch {{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary w-100"><i class="bi bi-filter"></i> Filter</button>
+                {% if search_query or selected_branch or selected_year %}
+                    <a href="{{ url_for('admin.manage_students') }}" class="btn btn-outline-danger" title="Reset Filters"><i class="bi bi-x-circle"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-light py-3 fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-mortarboard me-1 text-primary"></i> Registered Student Records ({{ students|length }})</span>
+    </div>
+    <div class="card-body p-0">
+        {% if students %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>USN / Roll</th>
+                        <th>Student Name</th>
+                        <th>Branch</th>
+                        <th>Grad Year</th>
+                        <th>CGPA</th>
+                        <th>10th / 12th / Dip %</th>
+                        <th>Backlogs</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                    <tr>
+                        <td class="fw-bold text-primary">{{ s.usn_or_roll }}</td>
+                        <td>
+                            <div class="fw-bold text-dark">{{ s.name }}</div>
+                            <small class="text-muted"><i class="bi bi-envelope"></i> {{ s.email }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ s.branch_code or s.branch_name }}</span>
+                        </td>
+                        <td class="fw-semibold text-dark">{{ s.graduation_year }}</td>
+                        <td>
+                            <span class="badge {% if s.cgpa >= 7.5 %}bg-success{% elif s.cgpa >= 6.5 %}bg-info text-dark{% else %}bg-warning text-dark{% endif %} fs-6">
+                                {{ "%.2f"|format(s.cgpa) }}
+                            </span>
+                        </td>
+                        <td>
+                            <small class="d-block text-muted"><strong>10th:</strong> {{ "%.1f"|format(s.tenth_percentage) }}%</small>
+                            <small class="d-block text-muted">
+                                {% if s.twelfth_percentage %}<strong>12th:</strong> {{ "%.1f"|format(s.twelfth_percentage) }}%{% endif %}
+                                {% if s.diploma_percentage %} <strong>Dip:</strong> {{ "%.1f"|format(s.diploma_percentage) }}%{% endif %}
+                            </small>
+                        </td>
+                        <td>
+                            {% if s.active_backlogs == 0 %}
+                                <span class="badge bg-success-subtle text-success border border-success">0 Active</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger fw-bold">{{ s.active_backlogs }} Active</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#editStudentModal{{ s.student_id }}">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <form action="{{ url_for('admin.delete_student', student_id=s.student_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete student {{ s.name }} ({{ s.usn_or_roll }})?');" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Student Modal -->
+                    <div class="modal fade" id="editStudentModal{{ s.student_id }}" tabindex="-1">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <form action="{{ url_for('admin.edit_student', student_id=s.student_id) }}" method="POST">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-1"></i> Edit Student Profile – {{ s.usn_or_roll }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Full Name</label>
+                                                <input type="text" name="name" class="form-control" value="{{ s.name }}" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">USN / Roll Number</label>
+                                                <input type="text" name="usn_or_roll" class="form-control" value="{{ s.usn_or_roll }}" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Email Address</label>
+                                                <input type="email" name="email" class="form-control" value="{{ s.email }}" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">Branch</label>
+                                                <select name="branch_id" class="form-select" required>
+                                                    {% for b in branches %}
+                                                        <option value="{{ b.branch_id }}" {% if b.branch_id == s.branch_id %}selected{% endif %}>{{ b.branch_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Graduation Year</label>
+                                                <input type="number" name="graduation_year" class="form-control" value="{{ s.graduation_year }}" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Current CGPA</label>
+                                                <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control" value="{{ s.cgpa }}" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">10th Percentage (%)</label>
+                                                <input type="number" step="0.01" min="0" max="100" name="tenth_percentage" class="form-control" value="{{ s.tenth_percentage }}" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">12th Percentage (%)</label>
+                                                <input type="number" step="0.01" min="0" max="100" name="twelfth_percentage" class="form-control" value="{{ s.twelfth_percentage or 0.0 }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Diploma Percentage (%)</label>
+                                                <input type="number" step="0.01" min="0" max="100" name="diploma_percentage" class="form-control" value="{{ s.diploma_percentage or 0.0 }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-semibold">Active Backlogs</label>
+                                                <input type="number" min="0" name="active_backlogs" class="form-control" value="{{ s.active_backlogs }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-people fs-1 text-secondary"></i>
+            <p class="mt-2 mb-0">No student records found matching the filter criteria.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('admin.manage_students') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-person-plus-fill me-1"></i> Register New Candidate Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">USN / Roll Number <span class="text-danger">*</span></label>
+                            <input type="text" name="usn_or_roll" class="form-control" placeholder="e.g. 1RV22CS099" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="student_create_password" class="form-control" placeholder="Default: student123" value="student123" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('student_create_password', this)" title="Toggle password visibility">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Branch <span class="text-danger">*</span></label>
+                            <select name="branch_id" class="form-select" required>
+                                <option value="">Select Branch...</option>
+                                {% for b in branches %}
+                                    <option value="{{ b.branch_id }}">{{ b.branch_name }} ({{ b.branch_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Graduation Year <span class="text-danger">*</span></label>
+                            <input type="number" name="graduation_year" class="form-control" value="2026" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">CGPA <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control" placeholder="e.g. 8.25" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">10th % <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" max="100" name="tenth_percentage" class="form-control" placeholder="e.g. 85.0" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">12th %</label>
+                            <input type="number" step="0.01" min="0" max="100" name="twelfth_percentage" class="form-control" placeholder="e.g. 82.5">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Diploma %</label>
+                            <input type="number" step="0.01" min="0" max="100" name="diploma_percentage" class="form-control" placeholder="Optional">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Active Backlogs</label>
+                            <input type="number" min="0" name="active_backlogs" class="form-control" value="0" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-bold"><i class="bi bi-check-circle-fill me-1"></i> Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Students Excel Modal -->
+<div class="modal fade" id="importStudentsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('admin.import_students_excel') }}" method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-file-earmark-excel-fill me-1"></i> Bulk Import Students from Excel / CSV</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small">Upload an Excel (<code>.xlsx</code> / <code>.xls</code>) or <code>.csv</code> spreadsheet containing student master records.</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Excel / CSV Spreadsheet File</label>
+                        <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    </div>
+                    <div class="bg-light p-3 rounded border small">
+                        <strong class="d-block text-dark mb-1"><i class="bi bi-info-circle me-1"></i> Supported Column Names:</strong>
+                        <code>USN/Roll</code>, <code>Name</code>, <code>Email</code>, <code>Branch</code>, <code>Graduation Year</code>, <code>CGPA</code>, <code>10th %</code>, <code>12th %</code>, <code>Diploma %</code>, <code>Active Backlogs</code>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-cloud-upload-fill me-1"></i> Upload & Import Students</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

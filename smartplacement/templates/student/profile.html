@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Student Profile & Skills{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-9">
+        <div class="card p-4 shadow-sm mb-4">
+            <h3 class="fw-bold text-primary mb-3"><i class="bi bi-person-gear me-2"></i> Profile & Technical Skill Manager</h3>
+            <p class="text-muted small mb-4">Keep your academic cutoffs, technical skills, project GitHub links, and certificates up-to-date.</p>
+
+            <form action="{{ url_for('student.profile') }}" method="POST">
+                <h5 class="fw-bold mb-3"><i class="bi bi-mortarboard me-2 text-primary"></i> Academic Performance</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Current CGPA (0-10)</label>
+                        <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control" value="{{ student.cgpa }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">10th Percentage (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="tenth_percentage" class="form-control" value="{{ student.tenth_percentage }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">12th Percentage (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="twelfth_percentage" class="form-control" value="{{ student.twelfth_percentage or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Diploma Percentage (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="diploma_percentage" class="form-control" value="{{ student.diploma_percentage or '' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Active Backlogs Count</label>
+                        <input type="number" min="0" name="active_backlogs" class="form-control" value="{{ student.active_backlogs }}" required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-code-slash me-2 text-primary"></i> Technical & Core Skills</h5>
+                    <button type="button" class="btn btn-outline-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#addStudentSkillModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Custom Skill
+                    </button>
+                </div>
+                <div class="row g-2 mb-4" style="max-height: 250px; overflow-y: auto;">
+                    {% for s in all_skills %}
+                    <div class="col-md-4 col-6">
+                        <div class="form-check card p-2 h-100 shadow-sm border-light">
+                            <input class="form-check-input ms-1" type="checkbox" name="skills" value="{{ s.skill_id }}" id="skill_{{ s.skill_id }}" {% if s.skill_id in current_skill_ids %}checked{% endif %}>
+                            <label class="form-check-label fw-semibold small ms-2" for="skill_{{ s.skill_id }}">
+                                {{ s.skill_name }} <span class="text-muted d-block small" style="font-size: 0.75rem;">({{ s.skill_category }})</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-journal-check me-2 text-primary"></i> Readiness Indicators</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">DSA Proficiency Level</label>
+                        <select name="dsa_proficiency" class="form-select">
+                            <option value="Beginner" {% if student.dsa_proficiency == 'Beginner' %}selected{% endif %}>Beginner</option>
+                            <option value="Intermediate" {% if student.dsa_proficiency == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+                            <option value="Advanced" {% if student.dsa_proficiency == 'Advanced' %}selected{% endif %}>Advanced</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Aptitude Test Score (%)</label>
+                        <input type="number" step="0.1" min="0" max="100" name="aptitude_score" class="form-control" value="{{ student.aptitude_score }}">
+                    </div>
+                </div>
+
+                <input type="hidden" name="projects_count" value="{{ projects|length }}">
+                <input type="hidden" name="certifications_count" value="{{ certificates|length }}">
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold shadow-sm"><i class="bi bi-save me-1"></i> Save Academic & Skill Changes</button>
+            </form>
+        </div>
+
+        <!-- Section 2: GitHub Projects Portfolio -->
+        <div class="card p-4 shadow-sm mb-4 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-github me-2 text-dark"></i> GitHub Projects & Repositories ({{ projects|length }})</h5>
+            </div>
+            
+            {% if projects %}
+            <div class="list-group mb-3">
+                {% for p in projects %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">{{ p.project_title }}</h6>
+                        <a href="{{ p.github_url }}" target="_blank" class="text-primary text-decoration-none small">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> {{ p.github_url }}
+                        </a>
+                    </div>
+                    <form action="{{ url_for('student.delete_project', project_id=p.project_id) }}" method="POST" onsubmit="return confirm('Delete this project link?');">
+                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete Project">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-light text-center border text-muted small mb-3">
+                No GitHub project links added yet. Add your project repository URLs below.
+            </div>
+            {% endif %}
+
+            <!-- Add Project Form -->
+            <form action="{{ url_for('student.add_project') }}" method="POST" class="card p-3 bg-light border-0">
+                <h6 class="fw-bold mb-2 text-primary"><i class="bi bi-plus-circle me-1"></i> Add New Project & GitHub Repository Link</h6>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" name="project_title" class="form-control form-control-sm" placeholder="Project Title (e.g. Smart Placement Portal)" required>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="url" name="github_url" class="form-control form-control-sm" placeholder="GitHub URL (e.g. https://github.com/user/repo)" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold"><i class="bi bi-plus-lg me-1"></i> Add Link</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Section 3: Certificate Documents & Uploads -->
+        <div class="card p-4 shadow-sm mb-4 border-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-award me-2 text-warning"></i> Certifications & Document Uploads ({{ certificates|length }})</h5>
+            </div>
+
+            {% if certificates %}
+            <div class="row g-3 mb-3">
+                {% for c in certificates %}
+                <div class="col-md-6">
+                    <div class="card p-3 h-100 shadow-sm border">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">{{ c.certificate_name }}</h6>
+                                <span class="badge bg-secondary-subtle text-secondary border small">
+                                    {% if c.file_path.endswith('.pdf') %}
+                                        <i class="bi bi-file-earmark-pdf text-danger me-1"></i> PDF Document
+                                    {% else %}
+                                        <i class="bi bi-file-earmark-image text-primary me-1"></i> Image (PNG/JPG)
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <form action="{{ url_for('student.delete_certificate', cert_id=c.certificate_id) }}" method="POST" onsubmit="return confirm('Remove this certificate?');">
+                                <button type="submit" class="btn btn-link text-danger p-0 border-0 ms-2" title="Delete Certificate">
+                                    <i class="bi bi-trash fs-5"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                            <small class="text-muted" style="font-size: 0.75rem;">Uploaded: {{ c.upload_date[:10] if c.upload_date else 'Recently' }}</small>
+                            <a href="{{ url_for('static', filename=c.file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary fw-bold">
+                                <i class="bi bi-box-arrow-up-right me-1"></i> Preview / View
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-light text-center border text-muted small mb-3">
+                No certificate files uploaded yet. Upload your PDF, PNG, or JPG certificates below.
+            </div>
+            {% endif %}
+
+            <!-- Upload Certificate Form -->
+            <form action="{{ url_for('student.upload_certificate') }}" method="POST" enctype="multipart/form-data" class="card p-3 bg-light border-0">
+                <h6 class="fw-bold mb-2 text-primary"><i class="bi bi-upload me-1"></i> Upload Certificate Document</h6>
+                <div class="row g-2">
+                    <div class="col-md-5">
+                        <input type="text" name="certificate_name" class="form-control form-control-sm" placeholder="Certificate Title (e.g. AWS Certified Cloud)" required>
+                    </div>
+                    <div class="col-md-5">
+                        <input type="file" name="certificate_file" class="form-control form-control-sm" accept=".pdf, .png, .jpg, .jpeg" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold"><i class="bi bi-cloud-upload me-1"></i> Upload</button>
+                    </div>
+                </div>
+                <small class="text-muted mt-1 d-block">Supported file types: <strong>PDF, PNG, JPG, JPEG</strong></small>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Custom Skill -->
+<div class="modal fade" id="addStudentSkillModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <form action="{{ url_for('student.add_custom_skill') }}" method="POST">
+                <div class="modal-header bg-primary text-white py-2">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-1"></i> Add Custom Skill</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Skill Name <span class="text-danger">*</span></label>
+                        <input type="text" name="skill_name" class="form-control form-control-sm" placeholder="e.g. React.js, PyTorch, Kubernetes" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Skill Category</label>
+                        <select name="skill_category" class="form-select form-select-sm">
+                            <option value="Programming">Programming</option>
+                            <option value="Frontend">Frontend</option>
+                            <option value="Backend">Backend</option>
+                            <option value="Database">Database</option>
+                            <option value="DevOps">DevOps</option>
+                            <option value="Core CSE">Core CSE</option>
+                            <option value="Technical" selected>Technical</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer p-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm fw-bold">Add to My Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

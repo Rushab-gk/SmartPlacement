@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="fw-bold mb-1">Welcome, {{ student.name }}!</h2>
+        <p class="text-muted mb-0">USN: <span class="badge bg-secondary">{{ student.usn_or_roll }}</span> | Branch: {{ student.branch_name }} | CGPA: <strong>{{ "%.2f"|format(student.cgpa) }}</strong></p>
+    </div>
+    <a href="{{ url_for('student.profile') }}" class="btn btn-outline-primary fw-semibold"><i class="bi bi-pencil-square me-1"></i> Edit Profile & Skills</a>
+</div>
+
+<!-- Key Stat Counters -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3 h-100">
+            <span class="text-white-50"><i class="bi bi-building"></i> Total Active Drives</span>
+            <div class="stat-value">{{ total_drives }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 border-start border-success border-4 bg-white">
+            <span class="text-muted"><i class="bi bi-check-circle-fill text-success"></i> Eligible Drives</span>
+            <div class="fs-2 fw-bold text-success">{{ eligible_count }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 border-start border-info border-4 bg-white">
+            <span class="text-muted"><i class="bi bi-currency-rupee text-info"></i> Highest Eligible Package</span>
+            <div class="fs-2 fw-bold text-dark">₹{{ "%.1f"|format(highest_eligible_ctc) }} LPA</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 h-100 border-start border-warning border-4 bg-white">
+            <span class="text-muted"><i class="bi bi-speedometer2 text-warning"></i> Placement Readiness</span>
+            <div class="fs-2 fw-bold text-primary">{{ readiness.readiness_score }} <span class="fs-6 text-muted">/ 100</span></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Recommendations & Drives -->
+    <div class="col-lg-8">
+        <div class="card p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold m-0"><i class="bi bi-star-fill text-warning me-2"></i> Top Company Recommendations</h5>
+                <a href="{{ url_for('placement.recommendations') }}" class="btn btn-sm btn-link text-decoration-none">View All Recommendations &rarr;</a>
+            </div>
+            
+            {% if ranked_drives %}
+            <div class="list-group list-group-flush">
+                {% for rd in ranked_drives %}
+                <div class="list-group-item py-3 px-0 border-bottom">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ rd.company_name }} — <span class="text-primary">{{ rd.job_role }}</span></h6>
+                            <span class="badge bg-success-subtle text-success border me-2">₹{{ "%.2f"|format(rd.package_ctc) }} LPA</span>
+                            {% if rd.is_eligible %}
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> ELIGIBLE</span>
+                            {% else %}
+                                <span class="badge bg-danger"><i class="bi bi-x-lg"></i> INELIGIBLE</span>
+                            {% endif %}
+                            <span class="badge bg-info text-dark ms-2">{{ rd.category }} (Match Score: {{ rd.final_score }}%)</span>
+                        </div>
+                        <a href="{{ url_for('company.detail', drive_id=rd.drive_id) }}" class="btn btn-sm btn-outline-secondary">View Details</a>
+                    </div>
+                    {% if not rd.is_eligible %}
+                        <div class="mt-2 text-danger small">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Reason: {{ rd.eligibility_reasons[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+                <p class="text-muted">No placement drives found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right Column: Readiness Score Breakdown -->
+    <div class="col-lg-4">
+        <div class="card p-3 mb-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i> Readiness Score Breakdown</h5>
+            <div class="progress mb-3" style="height: 20px;">
+                <div class="progress-bar progress-bar-custom" style="width: {{ readiness.readiness_score }}%;">{{ readiness.readiness_score }}%</div>
+            </div>
+            
+            <ul class="list-group list-group-flush small">
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Academic CGPA (25%)</span>
+                    <strong>{{ readiness.breakdown.cgpa_score }} / 25</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Technical Skills (25%)</span>
+                    <strong>{{ readiness.breakdown.skill_score }} / 25</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>DSA Proficiency (20%)</span>
+                    <strong>{{ readiness.breakdown.dsa_score }} / 20</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Projects Portfolio (15%)</span>
+                    <strong>{{ readiness.breakdown.projects_score }} / 15</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Certifications (10%)</span>
+                    <strong>{{ readiness.breakdown.certs_score }} / 10</strong>
+                </li>
+                <li class="list-group-item d-flex justify-content-between px-0">
+                    <span>Aptitude Score (5%)</span>
+                    <strong>{{ readiness.breakdown.apt_score }} / 5</strong>
+                </li>
+            </ul>
+
+            <h6 class="fw-bold mt-4 mb-2 text-primary"><i class="bi bi-lightbulb me-1"></i> Preparation Guidance</h6>
+            <ul class="ps-3 text-muted small">
+                {% for fb in readiness.feedback %}
+                    <li class="mb-1">{{ fb }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

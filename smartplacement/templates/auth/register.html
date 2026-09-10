@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}SmartPlacement – Student Registration{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-md-8">
+        <div class="card shadow-sm p-4">
+            <h3 class="fw-bold text-primary mb-2"><i class="bi bi-person-plus-fill me-2"></i> Student Registration</h3>
+            <p class="text-muted small mb-4">Create your local placement profile with accurate academic metrics.</p>
+
+            <form action="{{ url_for('auth.register') }}" method="POST" class="needs-validation" novalidate>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Full Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="John Doe" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">USN / Roll Number</label>
+                        <input type="text" name="usn_or_roll" class="form-control" placeholder="1VA22CS001" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">College Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <input type="password" name="password" id="register_password" class="form-control" placeholder="Secure password" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('register_password', this)" title="Toggle password visibility">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Academic Branch</label>
+                        <select name="branch_id" class="form-select" required>
+                            <option value="">-- Select Branch --</option>
+                            {% for b in branches %}
+                                <option value="{{ b.branch_id }}">{{ b.branch_name }} ({{ b.branch_code }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Graduation Year</label>
+                        <input type="number" name="graduation_year" class="form-control" value="2026" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Current CGPA (0.0 - 10.0)</label>
+                        <input type="number" step="0.01" min="0" max="10" name="cgpa" class="form-control" placeholder="8.50" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">10th Percentage (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="tenth_percentage" class="form-control" placeholder="85.00" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">12th Percentage (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" name="twelfth_percentage" class="form-control" placeholder="82.00">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Diploma Percentage (%) <span class="text-muted fs-7">(If applicable)</span></label>
+                        <input type="number" step="0.01" min="0" max="100" name="diploma_percentage" class="form-control" placeholder="N/A">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Active Backlogs Count</label>
+                        <input type="number" min="0" name="active_backlogs" class="form-control" value="0" required>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold"><i class="bi bi-check-circle me-1"></i> Register Profile</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

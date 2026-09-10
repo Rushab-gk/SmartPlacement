@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SmartPlacement – Campus Intelligence & Eligibility Portal{% endblock %}</title>
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <i class="bi bi-mortarboard-fill fs-4"></i>
+                <span>SmartPlacement</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('company.') %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('company.list_drives') }}"><i class="bi bi-building"></i> Placement Drives</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'placement.eligibility_checker' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('placement.eligibility_checker') }}"><i class="bi bi-check-circle"></i> Eligibility Checker</a>
+                    </li>
+                    {% if current_user_role == 'student' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'student.dashboard' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('student.dashboard') }}"><i class="bi bi-speedometer2"></i> Student Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'placement.recommendations' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('placement.recommendations') }}"><i class="bi bi-star"></i> Recommendations</a>
+                    </li>
+                    {% elif current_user_role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-shield-lock"></i> Admin Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.manage_students' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('admin.manage_students') }}"><i class="bi bi-people"></i> Manage Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.manage_branches' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('admin.manage_branches') }}"><i class="bi bi-diagram-3"></i> Manage Branches</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.manage_companies' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('admin.manage_companies') }}"><i class="bi bi-building-add"></i> Manage Companies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.manage_drives' %}active fw-bold text-white border-bottom border-2 border-white{% endif %}" href="{{ url_for('admin.manage_drives') }}"><i class="bi bi-calendar-event"></i> Manage Drives</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user_name %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle active fw-semibold" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ current_user_name }} ({{ current_user_role|capitalize }})
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                {% if current_user_role == 'student' %}
+                                <li><a class="dropdown-item" href="{{ url_for('student.profile') }}"><i class="bi bi-person-gear"></i> Edit Profile & Skills</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% elif current_user_role == 'admin' %}
+                                <li><a class="dropdown-item" href="{{ url_for('admin.profile') }}"><i class="bi bi-person-gear"></i> Admin Account Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+                        <li class="nav-item"><a class="btn btn-light btn-sm ms-2 text-primary fw-bold" href="{{ url_for('auth.register') }}">Register Profile</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Banner -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if custom_error %}
+            <div class="alert alert-danger text-center p-5 mt-4">
+                <h2 class="fw-bold">{{ custom_error }}</h2>
+                <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">Return to Home</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content Container -->
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-4 text-center">
+        <div class="container">
+            <p class="mb-1 text-light">&copy; 2026 SmartPlacement – Campus Placement Intelligence & Eligibility System</p>
+            <small>Built 100% Self-Contained with Python Flask & MySQL Relational Database (No External APIs)</small>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
